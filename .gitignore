@@ -1,7 +1,5 @@
-bash-4.1.tar.gz
-/bash-4.2-rc2.tar.gz
-/bash-4.2.tar.gz
-/bash-4.3.tar.gz
-/bash-4.4.tar.gz
-/bash-5.0.tar.gz
-/bash-5.1.tar.gz
+# gitignore created on 11/04/21 at 20:41
+# Disable reminder in prompt
+ignoredirmessage
+
+
