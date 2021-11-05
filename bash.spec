@@ -83,8 +83,9 @@ Patch126: bash-4.3-memleak-lc_all.patch
 # this patch disables it
 Patch127: bash-4.4-no-loadable-builtins.patch
 
-BuildRequires:  gcc
-BuildRequires: texinfo bison
+BuildRequires: gcc
+BuildRequires: texinfo
+BuildRequires: bison
 BuildRequires: ncurses-devel
 BuildRequires: autoconf, gettext
 # Required for bash tests
