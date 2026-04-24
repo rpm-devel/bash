@@ -1,12 +1,10 @@
-#% define beta_tag rc2
-%define patchleveltag .8
-%define baseversion 5.1
+%define baseversion 5.3
 %bcond_without tests
 
-Version: %{baseversion}%{patchleveltag}
+Version: %{baseversion}
 Name: bash
 Summary: The GNU Bourne Again shell
-Release: 2%{?dist}
+Release: 1%{?dist}
 License: GPLv3+
 Url: https://www.gnu.org/software/bash
 Source0: https://ftp.gnu.org/gnu/bash/bash-%{baseversion}.tar.gz
@@ -18,82 +16,23 @@ Source1: dot-bashrc
 Source2: dot-bash_profile
 Source3: dot-bash_logout
 
-# Official upstream patches
-# Patches are converted to apply with '-p1'
-%{lua:for i=1,8 do print(string.format("Patch%u: bash-5.1-patch-%u.patch\n", i, i)) end}
-
-# Other patches
-# We don't want to add '/etc:/usr/etc' in standard utils path.
-Patch101: bash-2.03-paths.patch
-# Non-interactive shells beginning with argv[0][0] == '-' should run the startup files when not in posix mode.
-Patch102: bash-2.03-profile.patch
-# https://bugzilla.redhat.com/show_bug.cgi?id=60870
-Patch103: bash-2.05a-interpreter.patch
-# Generate info for debuginfo files.
-Patch104: bash-2.05b-debuginfo.patch
-# Pid passed to setpgrp() can not be pid of a zombie process.
-Patch105: bash-2.05b-pgrp_sync.patch
-# Enable audit logs
-Patch106: bash-3.2-audit.patch
-# Source bashrc file when bash is run under ssh.
-Patch107: bash-3.2-ssh_source_bash.patch
-# Use makeinfo to generate .texi file
-Patch108: bash-infotags.patch
-# Try to pick up latest `--rpm-requires` patch from http://git.altlinux.org/gears/b/bash4.git
-Patch109: bash-requires.patch
-Patch110: bash-setlocale.patch
-# Disable tty tests while doing bash builds
-Patch111: bash-tty-tests.patch
-
-# 484809, check if interp section is NOBITS
-Patch116: bash-4.0-nobits.patch
-
-# Do the same CFLAGS in generated Makefile in examples
-Patch117: bash-4.1-examples.patch
-
-# Builtins like echo and printf won't report errors
-# when output does not succeed due to EPIPE
-Patch118: bash-4.1-broken_pipe.patch
-
-# # Enable system-wide .bash_logout for login shells
-Patch119: bash-4.2-rc2-logout.patch
-
-# Static analyzis shows some issues in bash-2.05a-interpreter.patch
-Patch120: bash-4.2-coverity.patch
-
-# 799958, updated info about trap
-# This patch should be upstreamed.
-Patch122: bash-4.2-manpage_trap.patch
-
-# https://www.securecoding.cert.org/confluence/display/seccode/INT32-C.+Ensure+that+operations+on+signed+integers+do+not+result+in+overflow
-# This patch should be upstreamed.
-Patch123: bash-4.2-size_type.patch
-
-# 1112710 - mention ulimit -c and -f POSIX block size
-# This patch should be upstreamed.
-Patch124: bash-4.3-man-ulimit.patch
-
-# 1102815 - fix double echoes in vi visual mode
-Patch125: bash-4.3-noecho.patch
-
-#1241533,1224855 - bash leaks memory when LC_ALL set
-Patch126: bash-4.3-memleak-lc_all.patch
-
-# bash-4.4 builds loadable builtin examples by default
-# this patch disables it
-Patch127: bash-4.4-no-loadable-builtins.patch
 
 BuildRequires: gcc
 BuildRequires: texinfo
 BuildRequires: bison
 BuildRequires: ncurses-devel
+# bash 5.3 needs readline 8.3+ which EL10 doesn't ship yet
+# Use bash's bundled readline instead
+#BuildRequires: readline-devel
 BuildRequires: autoconf, gettext
+BuildRequires: audit-libs-devel
 # Required for bash tests
 BuildRequires: glibc-devel
 BuildRequires: make
 Requires: filesystem >= 3
 Provides: /bin/sh
 Provides: /bin/bash
+Obsoletes: bash < %{version}-%{release}
 
 %description
 The GNU Bourne Again shell (Bash) is a shell or command language
@@ -104,6 +43,7 @@ incorporates useful features from the Korn shell (ksh) and the C shell
 %package devel
 Summary: Development headers for %{name}
 Requires: %{name}%{?_isa} = %{version}-%{release}
+Obsoletes: bash-devel < %{version}-%{release}
 
 %description devel
 This package contains development headers for %{name}.
@@ -111,6 +51,7 @@ This package contains development headers for %{name}.
 %package doc
 Summary: Documentation files for %{name}
 Requires: %{name} = %{version}-%{release}
+Obsoletes: bash-doc < %{version}-%{release}
 
 %description doc
 This package contains documentation files for %{name}.
@@ -126,7 +67,45 @@ rm y.tab.*
 
 %build
 autoconf
-%configure --with-bash-malloc=no --with-afs
+%configure \
+    --with-bash-malloc=no \
+    --with-afs \
+    --with-curses \
+    --without-installed-readline \
+    --enable-alias \
+    --enable-arith-for-command \
+    --enable-array-variables \
+    --enable-bang-history \
+    --enable-brace-expansion \
+    --enable-casemod-attributes \
+    --enable-casemod-expansions \
+    --enable-command-timing \
+    --enable-cond-command \
+    --enable-cond-regexp \
+    --enable-coprocesses \
+    --enable-debugger \
+    --enable-dev-fd-stat-broken \
+    --enable-directory-stack \
+    --enable-disabled-builtins \
+    --enable-dparen-arithmetic \
+    --enable-extended-glob \
+    --enable-extended-glob-default \
+    --enable-function-import \
+    --enable-glob-asciiranges-default \
+    --enable-help-builtin \
+    --enable-history \
+    --enable-job-control \
+    --enable-multibyte \
+    --enable-net-redirections \
+    --enable-process-substitution \
+    --enable-progcomp \
+    --enable-prompt-string-decoding \
+    --enable-readline \
+    --enable-restricted \
+    --enable-select \
+    --disable-separate-helpfiles \
+    --enable-single-help-strings \
+    --enable-translatable-strings
 
 # Recycles pids is neccessary. When bash's last fork's pid was X
 # and new fork's pid is also X, bash has to wait for this same pid.
@@ -135,8 +114,12 @@ MFLAGS="CPPFLAGS=-D_GNU_SOURCE -DRECYCLES_PIDS -DDEFAULT_PATH_VALUE='\"/usr/loca
 
 # work around missing deps in Makefiles
 make "$MFLAGS" version.h
-make "$MFLAGS" %{?_smp_mflags} -C builtins
+# builtins must build single-threaded first to avoid race conditions
+make "$MFLAGS" -C builtins
 make "$MFLAGS" %{?_smp_mflags}
+
+# Build loadable builtins
+make "$MFLAGS" %{?_smp_mflags} -C examples/loadables all
 
 %install
 if [ -e autoconf ]; then
@@ -225,8 +208,40 @@ done
 # copy doc to /usr/share/doc
 cat /dev/null > %{name}-doc.files
 mkdir -p %{buildroot}/%{_pkgdocdir}/doc
-# loadables aren't buildable
+# Install loadable builtins
+mkdir -p %{buildroot}%{_libdir}/bash
+install -p -m 755 examples/loadables/*.so %{buildroot}%{_libdir}/bash/ 2>/dev/null || \
+  for f in examples/loadables/accept examples/loadables/basename examples/loadables/cat \
+           examples/loadables/csv examples/loadables/cut examples/loadables/dirname \
+           examples/loadables/fdflags examples/loadables/finfo examples/loadables/head \
+           examples/loadables/id examples/loadables/ln examples/loadables/logname \
+           examples/loadables/mkdir examples/loadables/mkfifo examples/loadables/mktemp \
+           examples/loadables/mypid examples/loadables/pathchk examples/loadables/print \
+           examples/loadables/printenv examples/loadables/push examples/loadables/realpath \
+           examples/loadables/rm examples/loadables/rmdir examples/loadables/seq \
+           examples/loadables/setpgid examples/loadables/sleep examples/loadables/stat \
+           examples/loadables/strftime examples/loadables/sync examples/loadables/tee \
+           examples/loadables/truefalse examples/loadables/tty examples/loadables/uname \
+           examples/loadables/unlink examples/loadables/whoami; do
+    [ -f "$f" ] && install -p -m 755 "$f" %{buildroot}%{_libdir}/bash/
+  done
+
+# Create profile.d script to auto-enable loadable builtins
+mkdir -p %{buildroot}%{_sysconfdir}/profile.d
+cat > %{buildroot}%{_sysconfdir}/profile.d/bash-loadables.sh << 'EOPROFILE'
+# Enable bash loadable builtins if available
+if [ -n "$BASH_VERSION" ] && [ -d %{_libdir}/bash ]; then
+  for _loadable in %{_libdir}/bash/*; do
+    _name=$(basename "$_loadable")
+    enable -f "$_loadable" "$_name" 2>/dev/null
+  done
+  unset _loadable _name
+fi
+EOPROFILE
+
+# Remove loadable binaries from examples to avoid duplicate build-ids
 rm -rf examples/loadables
+
 for file in CHANGES COMPAT NEWS NOTES POSIX RBASH README examples
 do
   cp -rp "$file" %{buildroot}%{_pkgdocdir}/"$file"
@@ -306,16 +321,23 @@ end
 %{_mandir}/*/..1*
 %doc RBASH README
 %doc doc/{FAQ,INTRO,README,bash{,ref}.html}
+%dir %{_libdir}/bash
+%{_libdir}/bash/*
+%config(noreplace) %{_sysconfdir}/profile.d/bash-loadables.sh
 
 %files doc -f %{name}-doc.files
 %doc doc/*.ps doc/*.0 doc/*.html doc/article.txt
-%{_docdir}/*
 
 %files devel
 %{_includedir}/%{name}
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.3-1
+- Update to 5.3
+- Remove 5.1 patches
+- Modernize spec for EL10
+
 * Wed Jul 21 2021 Fedora Release Engineering <releng@fedoraproject.org> - 5.1.8-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
 
