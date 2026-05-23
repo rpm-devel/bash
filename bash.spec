@@ -1,4 +1,4 @@
-%define baseversion 5.3
+%global baseversion 5.3
 %bcond_without tests
 
 Version: %{baseversion}
@@ -333,6 +333,9 @@ end
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Fri May 22 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.3-1
+- Fix spec violations: %global for constants, use %{buildroot}
+
 * Fri Apr 24 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.3-1
 - Update to 5.3
 - Remove 5.1 patches
