@@ -5,8 +5,9 @@ Version: %{baseversion}
 Name: bash
 Summary: The GNU Bourne Again shell
 Release: 1%{?dist}
-License: GPLv3+
+License: GPL-3.0-or-later
 Url: https://www.gnu.org/software/bash
+ExclusiveArch: x86_64 aarch64
 Source0: https://ftp.gnu.org/gnu/bash/bash-%{baseversion}.tar.gz
 
 # For now there isn't any doc
@@ -333,6 +334,10 @@ end
 %{_libdir}/pkgconfig/%{name}.pc
 
 %changelog
+* Thu Jul 03 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.3-1
+- Source0: https://ftp.gnu.org/gnu/bash/bash-5.3.tar.gz (verified 200)
+- GPL-3.0-or-later SPDX; ExclusiveArch: x86_64 aarch64
+
 * Fri May 22 2026 CasjaysDev <rpm-devel@casjaysdev.pro> - 5.3-1
 - Fix spec violations: %global for constants, use %{buildroot}
 
