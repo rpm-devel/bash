@@ -51,7 +51,7 @@ This package contains development headers for %{name}.
 
 %package doc
 Summary: Documentation files for %{name}
-Requires: %{name} = %{version}-%{release}
+Requires: %{name} = %{?epoch:%{epoch}:}%{version}-%{release}
 Obsoletes: bash-doc < %{version}-%{release}
 
 %description doc
